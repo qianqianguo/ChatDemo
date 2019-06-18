@@ -17,6 +17,7 @@ import {
 } from '../reducers/auth';
 import Http from '../util/HttpUtil';
 import { Alert } from 'react-native';
+import AV from "leancloud-storage";
 
 function signUp() {
   return {
@@ -38,33 +39,22 @@ function signUpFailure(err) {
   }
 }
 
-export function createUser(username, password, email, phone_number) {
+export function createUser(username, password, email) {
   return (dispatch) => {
     dispatch(signUp());
-    let phone;
-    const firstTwoDigits = phone_number.substring(0, 2);
-    if (firstTwoDigits === '+1') {
-      phone = phone_number
-    } else {
-      phone = '+1' + phone_number
-    }
-    Http.post('',{
-      username,
-      password,
-      attributes: {
-        email,
-        phone_number: phone
-      }
-    })
-    .then(data => {
-      console.log('data from signUp: ', data)
-      dispatch(signUpSuccess(data))
-      dispatch(showSignUpConfirmationModal())
-    })
-    .catch(err => {
-      console.log('error signing up: ', err)
-      dispatch(signUpFailure(err))
-    });
+
+    const user = new AV.User();
+    user.setUsername(username);
+    user.setPassword(password);
+    user.setEmail(email);
+    user.signUp().then(function (loginedUser) {
+      // 注册成功
+      alert('注册成功,请登录');
+      dispatch(signUpSuccess(loginedUser));
+    }, (function (error) {
+      alert(JSON.stringify(error));
+      dispatch(signUpFailure(error))
+    }));
   }
 }
 
@@ -96,16 +86,14 @@ function logInFailure(err) {
 
 export function authenticate(username, password) {
   return (dispatch) => {
-    dispatch(logIn())
-    Http.get('',{username, password})
-      .then(user => {
-        dispatch(logInSuccess(user))
-        dispatch(showSignInConfirmationModal())
-      })
-      .catch(err => {
-        console.log('errror from signIn: ', err)
-        dispatch(logInFailure(err))
-      });
+    dispatch(logIn());
+    AV.User.logIn(username, password).then(function (user) {
+      // 登录成功
+      dispatch(logInSuccess(user));
+    }, function (error) {
+      alert(JSON.stringify(error));
+      dispatch(logInFailure(error))
+    });
   }
 }
 
@@ -121,20 +109,9 @@ export function showSignUpConfirmationModal() {
   }
 }
 
-export function confirmUserLogin(authCode) {
+export function confirmUserLogin() {
   return (dispatch, getState) => {
     dispatch(confirmLogIn());
-    const { auth: { user }} = getState();
-    console.log('state: ', getState());
-    Http.get('',user, authCode)
-      .then(data => {
-        console.log('data from confirmLogin: ', data)
-        dispatch(confirmLoginSuccess(data))
-      })
-      .catch(err => {
-        console.log('error signing in: ', err)
-        dispatch(confirmSignUpFailure(err))
-      })
   }
 }
 
@@ -158,7 +135,7 @@ function confirmLoginFailure() {
   }
 }
 
-export function confirmUserSignUp(username, authCode) {
+export function confirmUserSignUp(username) {
   return (dispatch) => {
     dispatch(confirmSignUp());
     Http.post('',{username, authCode})

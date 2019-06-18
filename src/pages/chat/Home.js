@@ -11,29 +11,24 @@ import {
 
 import { connect } from 'react-redux'
 
-import { logOut } from '../actions/auth'
-import { colors, fonts } from '../theme'
-const { width, height } = Dimensions.get('window');
+import { logOut } from '../../actions/auth'
+import { colors, fonts } from '../../theme'
+import Input from "../../components/Input";
+const { width } = Dimensions.get('window');
 
 class Home extends React.Component {
   static navigationOptions = {
     header: null
-  }
+  };
   state = {
     username: ''
-  }
+  };
   AnimatedScale = new Animated.Value(1)
   componentDidMount() {
     this.animate()
   }
   logout() {
-    // Auth.signOut()
-    //   .then(() => {
-    //     this.props.dispatchLogout()
-    //   })
-    //   .catch(err => {
-    //     console.log('err: ', err)
-    //   })
+    this.props.dispatchLogout()
   }
   navigate() {
     this.props.navigation.navigate('Route1')
@@ -57,17 +52,35 @@ class Home extends React.Component {
       ).start(() => this.animate())
     })
   }
+  onChangeText = (key, value) => {
+    this.setState({
+      [key]: value
+    })
+  };
+
   render() {
     return (
       <View style={styles.container}>
         <View style={styles.homeContainer}>
-          <Text style={styles.welcome}>Welcome</Text>
+          <Input
+              placeholder="输入想要聊天的用户名"
+              type='username'
+              onChangeText={this.onChangeText}
+              value={this.state.username}
+          />
+          <Text style={styles.welcome}
+                onPress={() => this.props.navigation.navigate(
+                    'Chat',
+                    {
+                      username: this.state.username
+                    })}
+          >开始聊天</Text>
           <Animated.Image
-            source={require('../assets/imgs/boomboxcropped.png')}
+            source={require('../../assets/imgs/boomboxcropped.png')}
             style={{ tintColor: colors.primary, width: width / 2, height: width / 2, transform: [{scale: this.AnimatedScale}]}}
             resizeMode='contain'
           />
-          <Text onPress={this.logout.bind(this)} style={styles.welcome}>Logout</Text>
+          <Text onPress={this.logout.bind(this)} style={styles.welcome}>退出登录</Text>
         </View>
       </View>
     )

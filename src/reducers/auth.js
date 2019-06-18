@@ -21,6 +21,7 @@ export const CONFIRM_LOGIN_FAILURE = 'CONFIRM_LOGIN_FAILURE';
 const initialState = {
   isAuthenticating: false,
   user: {},
+  isLoginSuccess: false,
 
   signUpError: false,
   signInError: false,
@@ -85,7 +86,7 @@ export default (state = initialState, action) => {
         ...state,
         isAuthenticating: false,
         signUpError: true,
-        signUpErrorMessage: action.error.message
+        signUpErrorMessage: action.error.rawMessage
       };
     case LOG_IN:
       return {
@@ -97,6 +98,7 @@ export default (state = initialState, action) => {
       return {
         isAuthenticating: false,
         user: action.user,
+        isLoginSuccess: true,
         showSignInConfirmationModal: true
       };
     case LOG_IN_FAILURE:

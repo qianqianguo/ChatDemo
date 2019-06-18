@@ -14,7 +14,7 @@ export default ({ title, onPress, isLoading }) => (
     <View style={styles.button}>
       <Text style={[styles.buttonText]}>{title}</Text>
       {
-        !isLoading && (
+        isLoading && (
           <View style={styles.activityIndicator}>
             <ActivityIndicator color={'white'} />
           </View>

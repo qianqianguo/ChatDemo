@@ -13,8 +13,8 @@ import {
     Dimensions
 } from 'react-native';
 
-import { connect } from 'react-redux'
-
+import { connect } from 'react-redux';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { authenticate, confirmUserLogin } from '../../actions/auth'
 import { fonts, colors } from '../../theme'
 
@@ -40,8 +40,7 @@ class SignIn extends Component<{}> {
   }
 
   confirm() {
-    const { authCode } = this.state;
-    this.props.dispatchConfirmUserLogin(authCode)
+    this.props.dispatchConfirmUserLogin()
   }
   
   render() {
@@ -53,7 +52,7 @@ class SignIn extends Component<{}> {
       showSignInConfirmationModal
     }} = this.props;
     return (
-        <ScrollView contentContainerStyle={{
+        <KeyboardAwareScrollView contentContainerStyle={{
           height: Dimensions.get('window').height - 84,
           width: Dimensions.get('window').width}}
                     bounces={false}>
@@ -73,8 +72,8 @@ class SignIn extends Component<{}> {
             </Text>
             <View style={styles.inputContainer}>
               <Input
-                  placeholder="手机号"
-                  type='telephoneNumber'
+                  placeholder="用户名"
+                  type='username'
                   onChangeText={this.onChangeText}
                   value={this.state.username}
               />
@@ -94,35 +93,14 @@ class SignIn extends Component<{}> {
             />
             <Text style={[styles.errorMessage, signInError && { color: 'black' }]}>登录失败. 请稍后尝试.</Text>
             <Text style={[styles.errorMessage, signInError && { color: 'black' }]}>{signInErrorMessage}</Text>
-            {
-              showSignInConfirmationModal && (
-                  <Modal>
-                    <View style={styles.modal}>
-                      <Input
-                          placeholder="Authorization Code"
-                          type='authCode'
-                          keyboardType='numeric'
-                          onChangeText={this.onChangeText}
-                          value={this.state.authCode}
-                          keyboardType='numeric'
-                      />
-                      <Button
-                          title='Confirm'
-                          onPress={this.confirm.bind(this)}
-                          isLoading={isAuthenticating}
-                      />
-                    </View>
-                  </Modal>
-              )
-            }
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
   }
 }
 
 const mapDispatchToProps = {
-  dispatchConfirmUserLogin: authCode => confirmUserLogin(authCode),
+  dispatchConfirmUserLogin: () => confirmUserLogin(),
   dispatchAuthenticate: (username, password) => authenticate(username, password)
 };
 

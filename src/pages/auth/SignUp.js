@@ -13,12 +13,11 @@ import {
 } from 'react-native';
 
 import { connect } from 'react-redux'
-
 import { fonts, colors } from '../../theme'
 import { createUser, confirmUserSignUp } from '../../actions/auth'
-
 import Input from '../../components/Input'
 import Button from '../../components/Button'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 const initialState = {
   username: '',
@@ -38,8 +37,12 @@ class SignUp extends Component<{}> {
   };
 
   signUp() {
-    const { username, password, email, phone_number } = this.state;
-    this.props.dispatchCreateUser(username, password, email, phone_number)
+    const { username, password, email } = this.state;
+    if(username === ''||password === ''||email === ''){
+      alert('请填写信息');
+      return;
+    }
+    this.props.dispatchCreateUser(username, password, email)
   }
 
   confirm() {
@@ -62,10 +65,11 @@ class SignUp extends Component<{}> {
       signUpErrorMessage
     }} = this.props;
     return (
-        <ScrollView contentContainerStyle={{
+        <KeyboardAwareScrollView contentContainerStyle={{
           height: Dimensions.get('window').height - 84,
           width: Dimensions.get('window').width}}
-                    bounces={false}>
+                    bounces={false}
+                    extraScrollHeight={15}>
           <View style={styles.container}>
             <View style={styles.heading}>
               <Image
@@ -83,39 +87,21 @@ class SignUp extends Component<{}> {
             <View style={styles.inputContainer}>
               <Input
                   value={this.state.username}
-                  placeholder="手机号"
-                  type='telephoneNumber'
+                  placeholder="用户名"
+                  type='username'
                   onChangeText={this.onChangeText}
               />
-              <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                <TextInput
-                    value={this.state.email}
-                    placeholder="验证码"
-                    type='email'
-                    onChangeText={this.onChangeText}
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    style={{
-                      flex: 1,
-                      height: 45,
-                      marginBottom: 15,
-                      borderBottomWidth: 1,
-                      fontSize: 16,
-                      borderBottomColor: colors.primary,
-                      fontFamily: fonts.light
-                    }}
-                    placeholderTextColor="#a0a0a0"
-                    underlineColorAndroid='transparent'
-                />
-                <TouchableOpacity style={{backgroundColor: 'red', borderRadius: 5, marginLeft: 10}}>
-                  <Text style={{margin: 8, color: '#fff'}}>获取验证码</Text>
-                </TouchableOpacity>
-              </View>
               <Input
                   value={this.state.password}
                   placeholder="密码"
                   secureTextEntry
                   type='password'
+                  onChangeText={this.onChangeText}
+              />
+              <Input
+                  value={this.state.email}
+                  placeholder="邮箱"
+                  type='email'
                   onChangeText={this.onChangeText}
               />
             </View>
@@ -124,31 +110,9 @@ class SignUp extends Component<{}> {
                 onPress={this.signUp.bind(this)}
                 isLoading={isAuthenticating}
             />
-            <Text style={[styles.errorMessage, signUpError && { color: 'black' }]}>Error logging in. Please try again.</Text>
-            <Text style={[styles.errorMessage, signUpError && { color: 'black' }]}>{signUpErrorMessage}</Text>
-            {
-              showSignUpConfirmationModal && (
-                  <Modal>
-                    <View style={styles.modal}>
-                      <Input
-                          placeholder="Authorization Code"
-                          type='authCode'
-                          keyboardType='numeric'
-                          onChangeText={this.onChangeText}
-                          value={this.state.authCode}
-                          keyboardType='numeric'
-                      />
-                      <Button
-                          title='Confirm'
-                          onPress={this.confirm.bind(this)}
-                          isLoading={isAuthenticating}
-                      />
-                    </View>
-                  </Modal>
-              )
-            }
+            <Text style={[styles.errorMessage, signUpError && { color: 'black' }]}>注册失败：{signUpErrorMessage}</Text>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
   }
 }
@@ -158,8 +122,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  dispatchConfirmUser: (username, authCode) => confirmUserSignUp(username, authCode),
-  dispatchCreateUser: (username, password, email, phone_number) => createUser(username, password, email, phone_number)
+  dispatchConfirmUser: (username) => confirmUserSignUp(username),
+  dispatchCreateUser: (username, password, email) => createUser(username, password, email)
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SignUp)
