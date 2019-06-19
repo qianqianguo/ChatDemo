@@ -44,7 +44,7 @@ const MessageListDidLoadEvent = "IMUIMessageListDidLoad";
 
 var themsgid = 1;
 var curConversation;
-
+var IMClient;
 function constructNormalMessage() {
 
     var message = {};
@@ -60,7 +60,6 @@ function constructNormalMessage() {
     };
     user.avatarPath = RNFS.MainBundlePath + '/shape.png';
     message.fromUser = user;
-
     return message
 }
 
@@ -86,57 +85,12 @@ class Chat extends React.Component {
             isAllowPullToRefresh: true,
             navigationBar: {}
         };
-
         this.updateLayout = this.updateLayout.bind(this);
     }
 
     componentDidMount() {
         this.initIM();
         this.resetMenu();
-        AuroraIController.addMessageListDidLoadListener(() => {
-            this.getHistoryMessage()
-        });
-    }
-
-    getHistoryMessage() {
-        var messages = [{
-            msgId: "1",
-            status: "send_succeed",
-            msgType: "text",
-            text: "This",
-            isOutgoing: true,
-            fromUser: {
-                userId: "1",
-                displayName: "Ken",
-                avatarPath: "ironman"
-            },
-            timeString: "10:00",
-        },{
-            msgId: "2",
-            status: "send_succeed",
-            msgType: "text",
-            text: "is",
-            isOutgoing: true,
-            fromUser: {
-                userId: "1",
-                displayName: "Ken",
-                avatarPath: "ironman"
-            },
-            timeString: "10:10",
-        },{
-            msgId: "3",
-            status: "send_succeed",
-            msgType: "text",
-            text: "example",
-            isOutgoing: true,
-            fromUser: {
-                userId: "1",
-                displayName: "Ken",
-                avatarPath: "ironman"
-            },
-            timeString: "10:20",
-        }];
-        AuroraIController.insertMessagesToTop(messages);
     }
 
     onInputViewSizeChange = (size) => {
@@ -156,6 +110,7 @@ class Chat extends React.Component {
         const username = navigation.getParam('username', '');
 
         realtime.createIMClient(user.getUsername()).then(function(me) {
+            IMClient = me;
             me.on(Event.MESSAGE, function(message, conversation) {
                 console.warn('信息:'+JSON.stringify(message));
                 let evenmessage = constructNormalMessage();
@@ -175,6 +130,9 @@ class Chat extends React.Component {
     }
 
     componentWillUnmount() {
+        IMClient.close().then(function() {
+            console.warn('退出会话登录');
+        }).catch(console.error.bind(console));
         AuroraIController.removeMessageListDidLoadListener(MessageListDidLoadEvent)
     }
 
@@ -197,10 +155,6 @@ class Chat extends React.Component {
         this.setState({
             inputViewLayout: { width: window.width, height: this.state.inputLayoutHeight }
         })
-        // if (this.state.shouldExpandMenuContainer) {
-        //   console.log("on touch input, expend menu")
-        //   this.expendMenu()
-        // }
     };
 
     onFullScreen = () => {
@@ -220,17 +174,13 @@ class Chat extends React.Component {
     };
 
     onAvatarClick = (message) => {
-        Alert.alert()
+        Alert.alert();
         AuroraIController.removeMessage(message.msgId)
     };
 
     onMsgClick = (message) => {
-        console.log(message)
+        console.log(message);
         Alert.alert("message", JSON.stringify(message))
-    };
-
-    onMsgLongClick = (message) => {
-        Alert.alert('message bubble on long press', 'message bubble on long press')
     };
 
     onStatusViewClick = (message) => {
@@ -239,7 +189,7 @@ class Chat extends React.Component {
     };
 
     onBeginDragMessageList = () => {
-        this.resetMenu()
+        this.resetMenu();
         AuroraIController.hidenFeatureView(true)
     };
 
@@ -249,7 +199,7 @@ class Chat extends React.Component {
 
     onPullToRefresh = () => {
         console.log("on pull to refresh")
-        var messages = []
+        var messages = [];
         for (var i = 0; i < 14; i++) {
             var message = constructNormalMessage()
             // if (index%2 == 0) {
@@ -310,12 +260,11 @@ class Chat extends React.Component {
     };
 
     onFinishRecordVideo = (mediaPath, duration) => {
-        // var message = constructNormalMessage()
-
-        // message.msgType = "video"
-        // message.mediaPath = mediaPath
-        // message.duration = duration
-        // AuroraIController.appendMessages([message])
+        var message = constructNormalMessage();
+        message.msgType = "video";
+        message.mediaPath = mediaPath;
+        message.duration = duration;
+        AuroraIController.appendMessages([message])
     };
 
     onSendGalleryFiles = (mediaFiles) => {
@@ -369,11 +318,6 @@ class Chat extends React.Component {
         this.setState({ inputViewLayout: layout })
     }
 
-    onInitPress() {
-        console.log('on click init push ');
-        this.updateAction();
-    }
-
     onClickSelectAlbum = () => {
         console.log("on click select album")
     };
@@ -387,7 +331,6 @@ class Chat extends React.Component {
                                  onMsgClick={this.onMsgClick}
                                  onStatusViewClick={this.onStatusViewClick}
                                  onTouchMsgList={this.onTouchMsgList}
-                                 onTapMessageCell={this.onTapMessageCell}
                                  onBeginDragMessageList={this.onBeginDragMessageList}
                                  onPullToRefresh={this.onPullToRefresh}
                                  avatarSize={{ width: 40, height: 40 }}
